@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الجدول الدراسي التفاعلي - الفرقة الثانية</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ------------------------- */
+        /* ---   CSS Styles    --- */
+        /* ------------------------- */
+
+        :root {
+            --bg-color-start: #1f2128;
+            --bg-color-end: #131516;
+            --card-bg-color: rgba(35, 40, 52, 0.45);
+            --primary-text-color: #f7fafc;
+            --secondary-text-color: #a0aec0;
+            --accent-color: #f6ad55; /* Orange accent */
+            --accent-glow: rgba(246, 173, 85, 0.4);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --timeline-color: #4a5568;
+            --break-color: #4a5568;
+        }
+
+        body.light-theme {
+            --bg-color-start: #f0f2f5;
+            --bg-color-end: #e4e6eb;
+            --card-bg-color: rgba(255, 255, 255, 0.7);
+            --primary-text-color: #1c1e21;
+            --secondary-text-color: #606770;
+            --accent-color: #d97706; /* Darker Orange */
+            --accent-glow: rgba(217, 119, 6, 0.3);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --timeline-color: #ccd0d5;
+            --break-color: #8d949e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-image: radial-gradient(circle, var(--bg-color-start), var(--bg-color-end));
+            background-attachment: fixed;
+            color: var(--primary-text-color);
+            line-height: 1.8;
+            padding: 20px;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease;
+        }
+
+        .schedule-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .schedule-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-text-color);
+        }
+        .schedule-title span {
+            background: linear-gradient(90deg, var(--primary-text-color), var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .author-link { text-align: center; margin-bottom: 20px; }
+
+        .group-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .group-btn {
+            background: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--primary-text-color);
+            padding: 10px 25px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .group-btn:hover { background-color: var(--accent-color); color: #fff; border-color: var(--accent-color); }
+        .group-btn.active {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 30px;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .days-grid.loading { opacity: 0.5; }
+
+        .day-card {
+            background: var(--card-bg-color);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .day-card.today { border-color: var(--accent-color); box-shadow: 0 0 30px var(--accent-glow); }
+        .today .day-title .today-badge { display: inline-block; }
+
+        .day-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-text-color);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .day-title .today-badge {
+            font-size: 0.9rem;
+            font-weight: 700;
+            background-color: var(--accent-color);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .events-list { list-style: none; position: relative; padding-right: 20px; }
+        .events-list::before {
+            content: '';
+            position: absolute;
+            top: 10px; right: 0; bottom: 10px;
+            width: 2px;
+            background-color: var(--timeline-color);
+            border-radius: 2px;
+        }
+        .event-item { position: relative; margin-bottom: 25px; padding-right: 25px; transition: transform 0.2s ease; }
+        .event-item:last-child { margin-bottom: 0; }
+        .event-item::after {
+            content: '';
+            position: absolute;
+            top: 10px; right: -6px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background-color: var(--bg-color-end);
+            border: 3px solid var(--accent-color);
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        /* تمييز المحاضرة الحالية */
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--accent-glow); } 70% { box-shadow: 0 0 0 10px rgba(246, 173, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(246, 173, 85, 0); } }
+        .event-item.current-event::after {
+            transform: scale(1.2);
+            animation: pulse 2s infinite;
+        }
+        .event-item.current-event { transform: scale(1.02); }
+
+        .event-item.is-break::after { border-color: var(--break-color); }
+        .is-break .event-subject { color: var(--secondary-text-color); font-style: italic; }
+
+        .event-time, .event-lecturer { display: flex; align-items: center; gap: 8px; color: var(--secondary-text-color); font-size: 0.95rem; }
+        .event-time { font-weight: 700; color: var(--primary-text-color); margin-bottom: 5px; }
+        .icon { width: 16px; height: 16px; fill: var(--accent-color); }
+        .event-subject { font-size: 1.3rem; font-weight: 500; color: var(--primary-text-color); margin-bottom: 5px; }
+        
+        /* زر تبديل المظهر */
+        .theme-switcher { position: absolute; top: 10px; left: 10px; }
+        .theme-switch-wrapper { display: flex; align-items: center; }
+        .theme-switch { display: inline-block; height: 26px; position: relative; width: 50px; }
+        .theme-switch input { display:none; }
+        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 26px; }
+        .slider:before { background-color: #fff; bottom: 3px; content: ""; height: 20px; left: 3px; position: absolute; transition: .4s; width: 20px; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .slider .icon { position: absolute; top: 50%; transform: translateY(-50%); color: var(--accent-color); transition: opacity 0.3s ease; fill: #fff;}
+        .slider .sun { right: 5px; opacity: 1; }
+        .slider .moon { left: 5px; opacity: 0; }
+        input:checked + .slider .sun { opacity: 0; }
+        input:checked + .slider .moon { opacity: 1; }
+        
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .schedule-title { font-size: 2.2rem; }
+            .days-grid { grid-template-columns: 1fr; }
+            .header-container { flex-direction: column; }
+            .theme-switcher { position: static; margin-top: 15px; }
+        }
+
+        /* وضع الطباعة */
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            .schedule-container { max-width: 100%; padding: 0; }
+            .header-container, .group-selector, .author-link { display: none !important; }
+            .schedule-title { color: #000; font-size: 24pt; margin-bottom: 20px; }
+            .days-grid { grid-template-columns: 1fr; gap: 20px; }
+            .day-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                backdrop-filter: none !important;
+                background: #fff !important;
+                page-break-inside: avoid;
+            }
+            .event-item, .day-title, .event-subject, .event-time, .event-lecturer { color: #000 !important; }
+            .event-item::after { border-color: #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0" style="display:none;">
+        <symbol id="icon-clock" viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13 7h-2v6h6v-2h-4z"></path></symbol>
+        <symbol id="icon-location" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path></symbol>
+        <symbol id="icon-sun" viewBox="0 0 24 24"><path d="M12 3c-4.963 0-9 4.037-9 9s4.037 9 9 9 9-4.037 9-9-4.037-9-9-9zm0 16c-3.859 0-7-3.141-7-7s3.141-7 7-7 7 3.141 7 7-3.141 7-7 7z M12 5c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5v-2c0-.276-.224-.5-.5-.5zm-4.414 2.414c-.195-.195-.512-.195-.707 0s-.195.512 0 .707l1.414 1.414c.195.195.512.195.707 0s.195-.512 0-.707L7.586 7.414z M17 11.5c0-.276-.224-.5-.5-.5h-2c-.276 0-.5.224-.5.5s.224.5.5.5h2c.276 0 .5-.224.5-.5z m-9.586 4.914c-.195-.195-.512-.195-.707 0s-.195.512 0 .707l1.414 1.414c.195.195.512.195.707 0s.195-.512 0-.707l-1.414-1.414z M12 17c.276 0 .5.224.5.5v2c0 .276-.224.5-.5.5s-.5-.224-.5-.5v-2c0-.276.224-.5-.5-.5z m4.914-1.414c.195.195.512.195.707 0s.195-.512 0-.707l-1.414-1.414c-.195-.195-.512-.195-.707 0s-.195.512 0 .707l1.414 1.414z"/></symbol>
+        <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M12 2.25a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75H12a.75.75 0 01-.75-.75V3a.75.75 0 01.75-.75zM8.25 4.5a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75H8.25a.75.75 0 01-.75-.75V5.25a.75.75 0 01.75-.75zM12 18a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75H12a.75.75 0 01-.75-.75V18.75a.75.75 0 01.75-.75zM15.75 4.5a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75h-.01a.75.75 0 01-.75-.75V5.25a.75.75 0 01.75-.75zM5.25 9.75a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75v-.01a.75.75 0 01.75-.75zM18.75 9.75a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75h-.01a.75.75 0 01-.75-.75v-.01a.75.75 0 01.75-.75zM8.25 15a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75H8.25a.75.75 0 01-.75-.75v-.01a.75.75 0 01.75-.75zM15.75 15a.75.75 0 01.75.75v.01a.75.75 0 01-.75.75h-.01a.75.75 0 01-.75-.75v-.01a.75.75 0 01.75-.75zM10.153 2.44a.75.75 0 01.07 1.058A11.2 11.2 0 0011.2 11.2c0 5.083 3.39 9.42 8.01 10.82a.75.75 0 11-.42 1.41A12.72 12.72 0 013.78 12.7a12.72 12.72 0 019.32-11.31.75.75 0 011.06.05z"/></symbol>
+    </svg>
+
+    <div class="schedule-container">
+        <div class="header-container">
+            <h1 class="schedule-title">📅 جدول الفرقة <span>الثانية</span></h1>
+            <div class="theme-switcher">
+                <label class="theme-switch" for="checkbox">
+                    <input type="checkbox" id="checkbox" />
+                    <div class="slider round">
+                         <svg class="icon sun"><use href="#icon-sun"></use></svg>
+                         <svg class="icon moon"><use href="#icon-moon"></use></svg>
+                    </div>
+                </label>
+            </div>
+        </div>
+         <div class="author-link"><a href="https://www.facebook.com/profile.php?id=61577044333150" target="_blank" style="color: var(--accent-color); text-decoration: none; font-weight: 700;">By Seif X DebiaN</a></div>
+        
+        <div class="group-selector">
+            <button class="group-btn active" data-group="1">المجموعة الأولى</button>
+            <button class="group-btn" data-group="2">المجموعة الثانية</button>
+            <button class="group-btn" data-group="3">المجموعة الثالثة</button>
+            <button class="group-btn" data-group="4">المجموعة الرابعة</button>
+        </div>
+
+        <div class="days-grid" id="days-grid-container">
+            <!-- سيتم ملء المحتوى هنا بواسطة JavaScript -->
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        // --- 1. تعريف بيانات الجدول الديناميكية ---
+        const mondaySchedules = { 1: ['دفاع', 'سلة', 'جمباز', 'أثقال'], 2: ['أثقال', 'دفاع', 'سلة', 'جمباز'], 3: ['جمباز', 'أثقال', 'دفاع', 'سلة'], 4: ['سلة', 'جمباز', 'أثقال', 'دفاع'] };
+        const tuesdayTimes = ['٨:٠٠ ص – ١٠:٠٠ ص', '١٠:٠٠ ص – ١٢:٠٠ م', '١٢:٠٠ م – ٢:٠٠ م', '٢:٠٠ م – ٤:٠٠ م'];
+        const wednesdaySchedules = { 1: ['سلة', 'جمباز', 'اثقال', 'دفاع'], 2: ['دفاع', 'سلة', 'جمباز', 'اثقال'], 3: ['اثقال', 'دفاع', 'سلة', 'جمباز'], 4: ['جمباز', 'اثقال', 'دفاع', 'سلة'] };
+
+        const scheduleTemplate = {
+            sunday: { name: 'الأحد', events: [{ time: '٤:٠٠ م – ٦:٠٠ م', subject: 'مبادئ التدريب الرياضي', details: 'د/ أحمد صلاح – مدرج 1', type: 'fixed' }] },
+            monday: { name: 'الاثنين', events: [ { time: '٨:٠٠ ص – ١٠:٠٠ ص', subject: 'PRACTICAL_0_MON', type: 'practical_mon' }, { time: '١٠:٠٠ ص – ١٢:٠٠ م', subject: 'PRACTICAL_1_MON', type: 'practical_mon' }, { time: '١٢:٠٠ م – ٢:٠٠ م', subject: 'PRACTICAL_2_MON', type: 'practical_mon' }, { time: '٢:٠٠ م – ٤:٠٠ م', subject: 'PRACTICAL_3_MON', type: 'practical_mon' }, { time: '٤:٠٠ م – ٦:٠٠ م', subject: 'فسيولوجيا الرياضة', type: 'fixed' }, { time: '٦:٠٠ م – ٨:٠٠ م', subject: 'نظري حاسب آلي', type: 'fixed' } ] },
+            tuesday: { name: 'الثلاثاء', events: [{ time: 'TIME_TUE', subject: 'حاسب آلي (عملي)', type: 'tuesday_practical' }] },
+            wednesday: { name: 'الأربعاء', events: [ { time: '٨:٠٠ ص – ١٠:٠٠ ص', subject: 'اساسيات مناهج', type: 'fixed' }, { time: '١٠:٠٠ ص – ١٢:٠٠ م', subject: 'PRACTICAL_0_WED', type: 'practical_wed' }, { time: '١٢:٠٠ م – ٢:٠٠ م', subject: 'PRACTICAL_1_WED', type: 'practical_wed' }, { time: '٢:٠٠ م – ٤:٠٠ م', subject: 'PRACTICAL_2_WED', type: 'practical_wed' }, { time: '٤:٠٠ م – ٦:٠٠ م', subject: 'PRACTICAL_3_WED', type: 'practical_wed' } ] },
+            thursday: { name: 'الخميس', events: [ { time: '٣:٠٠ م – ٤:٠٠ م', subject: 'نظري اساسيات رفع اثقال', details: 'مدرج 2', type: 'fixed' }, { time: '٤:٠٠ م – ٥:٠٠ م', subject: 'PLACEHOLDER', details: 'PLACEHOLDER', type: 'thursday_dynamic' }, { time: '٥:٠٠ م – ٦:٠٠ م', subject: 'PLACEHOLDER', details: 'PLACEHOLDER', type: 'thursday_dynamic' }, { time: '٦:٠٠ م – ٧:٠٠ م', subject: 'PLACEHOLDER', details: 'PLACEHOLDER', type: 'thursday_dynamic' }, { time: '٧:٠٠ م – ٨:٠٠ م', subject: 'PLACEHOLDER', details: 'PLACEHOLDER', type: 'thursday_dynamic' } ] }
+        };
+        
+        const daysGridContainer = document.getElementById('days-grid-container');
+        
+        function renderSchedule(groupNumber) {
+            daysGridContainer.classList.add('loading');
+            let html = '';
+            for (const dayKey in scheduleTemplate) {
+                const day = scheduleTemplate[dayKey];
+                let eventsHtml = '';
+                day.events.forEach(event => {
+                    let { subject, time, details, type } = { ...event };
+                    let isBreak = false;
+                    
+                    if (type === 'practical_mon') { subject = mondaySchedules[groupNumber][parseInt(subject.split('_')[1])]; details = null; }
+                    else if (type === 'practical_wed') { subject = wednesdaySchedules[groupNumber][parseInt(subject.split('_')[1])]; details = null; }
+                    else if (type === 'tuesday_practical') { time = tuesdayTimes[groupNumber - 1]; details = null; }
+                    else if (type === 'thursday_dynamic') {
+                        const isFirstHalf = groupNumber <= 2;
+                        switch (time) {
+                            case '٤:٠٠ م – ٥:٠٠ م': [subject, details, isBreak] = isFirstHalf ? ['استراحة', null, true] : ['نظري اساسيات كرة السلة', 'مدرج 1', false]; break;
+                            case '٥:٠٠ م – ٦:٠٠ م': [subject, details, isBreak] = isFirstHalf ? ['نظري اساسيات كرة السلة', 'مدرج 2', false] : ['استراحة', null, true]; break;
+                            case '٦:٠٠ م – ٧:٠٠ م': [subject, details] = isFirstHalf ? ['نظري اساسيات جمباز', 'مدرج 2'] : ['نظري اساسيات الدفاع عن النفس', 'مدرج 1']; break;
+                            case '٧:٠٠ م – ٨:٠٠ م': [subject, details] = isFirstHalf ? ['نظري اساسيات الدفاع عن النفس', 'مدرج 2'] : ['نظري اساسيات جمباز', 'مدرج 1']; break;
+                        }
+                    }
+
+                    const detailsHtml = details ? `<div class="event-lecturer"><svg class="icon"><use href="#icon-location"></use></svg><span>${details}</span></div>` : '';
+                    eventsHtml += `<li class="event-item ${isBreak ? 'is-break' : ''}" data-time="${time}">
+                        <div class="event-time"><svg class="icon"><use href="#icon-clock"></use></svg>${time}</div>
+                        <p class="event-subject">${subject}</p>${detailsHtml}</li>`;
+                });
+                const subTitle = day.sub ? ` ${day.sub}` : '';
+                html += `<div class="day-card" id="day-${dayKey}"><h2 class="day-title">${day.name}${subTitle} <span class="today-badge">اليوم</span></h2><ul class="events-list">${eventsHtml}</ul></div>`;
+            }
+            setTimeout(() => {
+                daysGridContainer.innerHTML = html;
+                highlightToday();
+                highlightCurrentEvent();
+                daysGridContainer.classList.remove('loading');
+            }, 300);
+        }
+
+        function highlightToday() {
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const todayId = `day-${dayNames[new Date().getDay()]}`;
+            const todayCard = document.getElementById(todayId);
+            if (todayCard) todayCard.classList.add('today');
+        }
+
+        const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        function parseTime(timeStr) {
+            let processedStr = timeStr.split('').map(char => arabicNumerals.indexOf(char) !== -1 ? arabicNumerals.indexOf(char) : char).join('');
+            const [startStr, endStr] = processedStr.split('–').map(s => s.trim());
+            
+            const toMinutes = (str) => {
+                const isPm = str.includes('م');
+                const [hourStr, minuteStr] = str.replace(/[صم]/g, '').trim().split(':');
+                let hour = parseInt(hourStr);
+                const minute = parseInt(minuteStr) || 0;
+                if (isPm && hour !== 12) hour += 12;
+                if (!isPm && hour === 12) hour = 0; // 12 AM is 0 hour
+                return hour * 60 + minute;
+            };
+            return { start: toMinutes(startStr), end: toMinutes(endStr) };
+        }
+
+        function highlightCurrentEvent() {
+            const now = new Date();
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const todayId = `day-${dayNames[now.getDay()]}`;
+            const todayCard = document.getElementById(todayId);
+
+            if (!todayCard) return;
+
+            const nowInMinutes = now.getHours() * 60 + now.getMinutes();
+
+            document.querySelectorAll('.event-item.current-event').forEach(el => el.classList.remove('current-event'));
+
+            todayCard.querySelectorAll('.event-item').forEach(item => {
+                const timeData = parseTime(item.dataset.time);
+                if (nowInMinutes >= timeData.start && nowInMinutes < timeData.end) {
+                    item.classList.add('current-event');
+                }
+            });
+        }
+        
+        // --- إدارة الإعدادات ---
+        const themeToggle = document.getElementById('checkbox');
+        const groupButtons = document.querySelectorAll('.group-btn');
+        
+        // تطبيق الإعدادات عند التحميل
+        const savedTheme = localStorage.getItem('scheduleTheme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            themeToggle.checked = false;
+        } else {
+            themeToggle.checked = true;
+        }
+
+        const savedGroup = localStorage.getItem('selectedGroup') || '1';
+        renderSchedule(parseInt(savedGroup));
+        groupButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.group === savedGroup));
+        
+        // حفظ الإعدادات عند التغيير
+        themeToggle.addEventListener('change', () => {
+            const isDarkMode = themeToggle.checked;
+            document.body.classList.toggle('light-theme', !isDarkMode);
+            localStorage.setItem('scheduleTheme', isDarkMode ? 'dark' : 'light');
+        });
+
+        groupButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const groupNum = this.dataset.group;
+                groupButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                localStorage.setItem('selectedGroup', groupNum);
+                renderSchedule(parseInt(groupNum));
+            });
+        });
+        
+        // تحديث المحاضرة الحالية كل دقيقة
+        setInterval(highlightCurrentEvent, 60000);
+
+    })();
+    </script>
+
+</body>
+</html>
