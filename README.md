@@ -12,8 +12,6 @@ A modern, interactive, and responsive weekly schedule for university students. B
 
 ### 🚀 [View Live Demo | مشاهدة العرض المباشر](https://seif4d.github.io/Interactive-Student-Schedule/)
 
-**ملاحظة:** لتفعيل العرض المباشر، اذهب إلى `Settings` > `Pages` في مستودعك واختر `main` branch ثم اضغط `Save`.
-
 ---
 
 
@@ -80,4 +78,4 @@ Since this is a pure front-end project with no build steps, getting started is s
 
 ### 📄 License | الترخيص
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for details.
+This project is licensed under the MIT License.
